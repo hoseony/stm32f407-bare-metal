@@ -32,7 +32,7 @@ SECTIONS {
         _edata = .;
     } > SRAM AT > FLASH
 
-    _sidata = LOADADDR(.data);
+    _sidata = LOADADDR(.data); /* start address of .data in flash */
 
     .bss : {
         _sbss = .;
@@ -61,5 +61,5 @@ SECTIONS {
      * _sdata   |
      * ------------------------------
      * Start of RAM
-     * /
+     */
 }
