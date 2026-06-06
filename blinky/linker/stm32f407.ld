@@ -1,5 +1,5 @@
 /* Entry Point */
-ENTRY(RESET_HANDLER)
+ENTRY(_reset) /* This is a first `vector` */
 
 MEMORY {
     FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 1024K /* flash memory region */
@@ -24,4 +24,42 @@ SECTIONS {
 
   /* | .rodata: Where constants are being stored */
     .rodata  : { *(.rodata*)}        > FLASH
+
+    .data : {
+        _sdata = .; /* These just marks the start */
+        *(.first_data)
+        *(.data SORT(.data.*))
+        _edata = .;
+    } > SRAM AT > FLASH
+
+    _sidata = LOADADDR(.data);
+
+    .bss : {
+        _sbss = .;
+        *(.bss SORT(.bss.*) COMMON)
+        _ebss = .;
+    } > SRAM
+
+    . = ALIGN(8); /* This rounds up to the next 8 byte boundary
+                     (allocation expects to start on an alligned address) */
+    _end = .;     /* good to go */
+
+    /* 
+     * ------------------------------
+     * The picture goes like This
+     * ------------------------------
+     * _estack  | (stack grows down)
+     *          | stack
+     *          | heap
+     *          | (malloc goes up)
+     * _end     | ALGIN(8) padding
+     * _ebss    |
+     *          | .bss
+     * _sbss    |
+     * _edata   |
+     *          | .data
+     * _sdata   |
+     * ------------------------------
+     * Start of RAM
+     * /
 }

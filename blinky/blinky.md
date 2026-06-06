@@ -5,8 +5,19 @@ I will be putting some notes as I go through my journey during this summer (and 
 
 ## WIP from here
 
-### src/stm32f407.ld
+### General Resources
+STM32World bare-metal development
+https://stm32world.com/wiki/STM32_Bare_Metal_Development
 
-Links that I found useful: 
+Bare-Metal Programming Guide
+https://github.com/cpq/bare-metal-programming-guide
+
+### src/stm32f407.ld
 https://sourceware.org/binutils/docs/ld/Scripts.html
+https://wiki.osdev.org/Linker_Scripts
 https://github.com/PaxInstruments/STM32CubeF4/blob/master/Projects/STM32F4-Discovery/Applications/FatFs/FatFs_USBDisk/SW4STM32/STM32F4-DISCO/STM32F407VGTx_FLASH.ld 
+
+
+### Bootstrapping
+When u start a computer, the process requires some sequences of stages to happen to run a program. You can think bootstrapping as something that happens between starting up a computer and running `main`.
+

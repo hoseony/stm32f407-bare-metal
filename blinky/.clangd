@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - -std=c11
+    - -Wall
+    - -Wextra
+    - -mcpu=cortex-m4
+    - -mthumb
