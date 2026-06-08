@@ -21,3 +21,18 @@ https://github.com/PaxInstruments/STM32CubeF4/blob/master/Projects/STM32F4-Disco
 ### Bootstrapping
 When u start a computer, the process requires some sequences of stages to happen to run a program. You can think bootstrapping as something that happens between starting up a computer and running `main`.
 
+
+### __attribute__
+
+__attribute__((__aligned__(x)))
+it aligns memory address to multiple of x 
+
+__attribute__((weak))
+It allows you to override the symbol
+
+__attribute__((section("section_name"))): 
+It forces stuff into a specific section in the object file
+
+There are more stuff you can do, but I only put here things that might useful to me
+ - naked: omit standard function prologue and epilogue sequence (when generating asesembly)
+ - noreturn: this function never returns
