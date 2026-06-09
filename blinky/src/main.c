@@ -5,13 +5,15 @@
 // ------------ Definitions -------------
 // * todo: Move this to a header file 
 
+
+// ------------ GPIO -------------
 // Reference Manual 8.4 
 // GPIO registers
 typedef struct {
     volatile uint32_t MODER;
     volatile uint32_t OTYPER;
     volatile uint32_t OSPEEDR;
-    volatile uint32_t PURDR;
+    volatile uint32_t PUPDR;
     volatile uint32_t IDR;
     volatile uint32_t ODR;
     volatile uint32_t BSRR;
@@ -32,31 +34,81 @@ enum {
 };
 
 // Reference Manual 2.2
-#define GPIOA ((gpio *) 0x40020000)
-#define GPIOB ((gpio *) 0x40020400)
-#define GPIOC ((gpio *) 0x40020800)
-#define GPIOD ((gpio *) 0x40020C00)
-#define GPIOE ((gpio *) 0x40021000)
-#define GPIOF ((gpio *) 0x40021400)
-#define GPIOG ((gpio *) 0x40021800)
-#define GPIOH ((gpio *) 0x40021C00)
-#define GPIOI ((gpio *) 0x40022000)
-#define GPIOJ ((gpio *) 0x40022400)
-#define GPIOK ((gpio *) 0x40022800)
+#define GPIO(bank) ((GPIO_t *)(0x40020000 + 0x400 * (bank))) // calculating GPIO bank
 
-// ------------ function prototypes -------------
+#define PIN(bank, num) (((bank - 'A') << 8) | (num))         // packing things in pin
+#define PINNO(pin) (uint8_t)(pin & 255)                      // lower bits
+#define PINBANK(pin) (pin >> 8)                              // upper bits
+/* This way, you can do something like    *
+ *   uint16_t pin = PIN('A', 3);          *
+ *   GPIO_setMode(pin, GPIO_MODE_OUTPUT); */
 
+
+// ------------ RCC -------------
+
+// Reference Manual 7.3.24
+// RCC registers
+typedef struct {
+    volatile uint32_t CR;
+    volatile uint32_t PLLCFGR;
+    volatile uint32_t CFGR;
+    volatile uint32_t CIR;
+    volatile uint32_t AHB1RSTR;
+    volatile uint32_t AHB2RSTR;
+    volatile uint32_t AHB3RSTR;
+    volatile uint32_t _RESERVED0;    // reserved
+    volatile uint32_t APB1RSTR;
+    volatile uint32_t APB2RSTR;
+    volatile uint32_t _RESERVED1[2]; // reserved
+    volatile uint32_t AHB1ENR;
+    volatile uint32_t AHB2ENR;
+    volatile uint32_t AHB3ENR;
+    volatile uint32_t _RESERVED2;    // reserved
+    volatile uint32_t APB1ENR;
+    volatile uint32_t APB2ENR;
+    volatile uint32_t _RESERVED3[2]; // reserved
+    volatile uint32_t AHB1LPENR;
+    volatile uint32_t AHB2LPENR;
+    volatile uint32_t AHB3LPENR;
+    volatile uint32_t _RESERVED4;    // reserved
+    volatile uint32_t APB1LPENR;
+    volatile uint32_t APB2LPENR;
+    volatile uint32_t _RESERVED5[2]; // reserved
+    volatile uint32_t BDCR;
+    volatile uint32_t CSR;
+    volatile uint32_t _RESERVED6[2]; // reserved
+    volatile uint32_t SSCGR;
+    volatile uint32_t PLLI2SCFGR;
+} RCC_t;
+
+// Reference Manual 2.2
+#define RCC ((RCC_t *)(0x40023800))
+
+// ------------ Helper Functions -------------
+
+#define BIT(x) (1UL << (x)) // just for the convinience
+
+// input: packed "pin", enum mode
+static inline void GPIO_setMode(uint16_t pin, uint8_t mode) {
+    GPIO_t *gpio = GPIO(PINBANK(pin)); // calculate GPIO bank
+    uint8_t num = PINNO(pin);          // unpacking
+
+    // reference manual 8.4.1
+    gpio->MODER &= ~(0b11U << (num * 2));                   // clear it first
+    gpio->MODER |= ((uint32_t)(mode & 0b11U)) << (num * 2); // Then set the mode
+}
 
 // ------------ Main Instructions -------------
 
 int main(void) {
-    uint32_t cnt = 0;
-    uint32_t half;
+    // PD13 - orange LED
+    // PD12 - green LED
+    // PD14 - RED LED
+    // PD15 - blue LED
+
 
     while(1) {
-        cnt += 2;
-        half = cnt / 2;
-        ++half;
+
     }
 }
 
