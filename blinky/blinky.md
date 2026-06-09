@@ -36,3 +36,5 @@ It forces stuff into a specific section in the object file
 There are more stuff you can do, but I only put here things that might useful to me
  - naked: omit standard function prologue and epilogue sequence (when generating asesembly)
  - noreturn: this function never returns
+
+### RCC (Reset and Clock Control)

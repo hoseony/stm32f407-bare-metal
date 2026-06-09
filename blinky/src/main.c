@@ -84,6 +84,11 @@ typedef struct {
 // Reference Manual 2.2
 #define RCC ((RCC_t *)(0x40023800))
 
+// as mentioned above, 
+// todo: move everything to headerfile untill here
+// -------------------------------------------
+
+
 // ------------ Helper Functions -------------
 
 #define BIT(x) (1UL << (x)) // just for the convinience
@@ -98,18 +103,55 @@ static inline void GPIO_setMode(uint16_t pin, uint8_t mode) {
     gpio->MODER |= ((uint32_t)(mode & 0b11U)) << (num * 2); // Then set the mode
 }
 
+static inline void GPIO_BSRR_writeBit(uint16_t pin, bool val) {
+    GPIO_t *gpio = GPIO(PINBANK(pin));
+    uint8_t num = PINNO(pin);
+
+    if (val) {
+        gpio->BSRR = BIT(num);
+    } else {
+        gpio->BSRR = BIT(num + 16);
+    }
+}
+
 // ------------ Main Instructions -------------
 
-int main(void) {
-    // PD13 - orange LED
-    // PD12 - green LED
-    // PD14 - RED LED
-    // PD15 - blue LED
+void counter(uint32_t count) {
+    for (uint32_t i = 0; i <= count; i++) {
+        ;
+    }
+}
 
+int main(void) {
+    // Let's try blinking the built-in LEDs 
+
+    // We can see from User Manual 4.4 that 
+    //  - PD13: orange LED
+    //  - PD12: green LED
+    //  - PD14: RED LED
+    //  - PD15: blue LED
+
+    // To use this, we need to enable GPIO D...
+
+    // RCC_AHB1ENR has IO port A-I clock enable bits
+    // (bit 0: A, bit 1: B, ..., bit 8: I)
+
+    uint16_t LED_blue = PIN('D', 15);
+    RCC->AHB1ENR |= BIT(3);
+    GPIO_setMode(LED_blue, GPIO_MODE_OUTPUT);
+
+    // Reference Manual 8.4.6 8.4.7
+    // to turn LED on and off, you need to modify ODR register 
+    // you can do this by modifying BSRR register
 
     while(1) {
-
+        GPIO_BSRR_writeBit(LED_blue, 1);
+        counter(1000000);
+        GPIO_BSRR_writeBit(LED_blue, 0);
+        counter(1000000);
     }
+
+    return 0;
 }
 
 // ------------ Startup Code -------------
