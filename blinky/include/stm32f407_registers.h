@@ -88,4 +88,15 @@ typedef struct {
 // Reference Manual 2.2
 #define RCC ((RCC_t *)(0x40023800))
 
+// ------------ SysTick -------------
+// https://developer.arm.com/documentation/ddi0413/d/system-control/about-system-control
+typedef struct {
+    volatile uint32_t CTRL;
+    volatile uint32_t LOAD;
+    volatile uint32_t VAL;
+    volatile uint32_t CALI;
+} SYSTICK_t;
+
+#define SYSTICK ((SYSTICK_t *)(0xe000e010))
+
 #endif

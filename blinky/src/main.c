@@ -27,6 +27,19 @@ static inline void GPIO_BSRR_writeBit(uint16_t pin, bool val) {
     }
 }
 
+static inline void SYSTICK_init(uint32_t ticks) {
+    if ((ticks - 1) > 0xffffff) { // 
+        return;
+    }
+
+    SYSTICK->LOAD = ticks - 1;
+    SYSTICK->VAL = 0; // Writing anything to this register resets it
+    SYSTICK->CTRL = BIT(0) | BIT(1) | BIT(2);
+    // enable | counting down to 0  send interrupt| processor clock
+    
+    //RCC->APB2ENR |= BIT(14);
+}
+
 // ------------ Main Instructions -------------
 
 void counter(uint32_t count) {
@@ -34,6 +47,24 @@ void counter(uint32_t count) {
         ;
     }
 }
+
+// we can do better than just for loop
+// Let's use the system clock 
+// For stm32 f407, the default clock is 16MHz (we can be more accurate)
+
+static volatile uint32_t s_ticks;
+
+void SysTick_Handler(void) {
+    s_ticks++;
+}
+
+void delay(uint32_t ms) {
+    uint32_t until = s_ticks + ms;
+    while (s_ticks < until) {
+        ;
+    }
+}
+
 
 int main(void) {
     // Let's try blinking the built-in LEDs 
@@ -57,13 +88,27 @@ int main(void) {
     // to turn LED on and off, you need to modify ODR register 
     // you can do this by modifying BSRR register
 
+    /*
     while(1) {
         GPIO_BSRR_writeBit(LED_blue, 1);
         counter(1000000);
         GPIO_BSRR_writeBit(LED_blue, 0);
         counter(1000000);
-    }
+    } 
+    */
+    
+    // That's all good, but polling is not so cool.
+    // Let's do something better
 
+    SYSTICK_init(16000000 / 1000);
+
+    while(1) {
+        GPIO_BSRR_writeBit(LED_blue, 1);
+        delay(500);
+        GPIO_BSRR_writeBit(LED_blue, 0);
+        delay(500);
+    } 
+    
     return 0;
 }
 
@@ -86,4 +131,11 @@ __attribute__((naked, noreturn)) void _reset(void) {
 }
 
 // 16 standard and 91 STM32-specific handlers
-__attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {_estack, _reset};
+// The 16 standard Interrupts are from ARM Cortex-M4 Generic User Guide 
+// 0s are placeholder (for now)
+
+__attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {
+    _estack, _reset, 0, 0, 0, 
+    0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 
+    SysTick_Handler};
