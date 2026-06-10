@@ -27,7 +27,7 @@ static inline void GPIO_BSRR_writeBit(uint16_t pin, bool val) {
     }
 }
 
-static inline void SYSTICK_init(uint32_t ticks) {
+static inline void SysTick_init(uint32_t ticks) {
     if ((ticks - 1) > 0xffffff) { // 
         return;
     }
@@ -48,9 +48,9 @@ void counter(uint32_t count) {
     }
 }
 
-// we can do better than just for loop
+// we can do better than just for loop (we want it to be more accurate)
 // Let's use the system clock 
-// For stm32 f407, the default clock is 16MHz (we can be more accurate)
+// Note that for stm32f407, the default clock is 16MHz
 
 static volatile uint32_t s_ticks;
 
@@ -64,7 +64,6 @@ void delay(uint32_t ms) {
         ;
     }
 }
-
 
 int main(void) {
     // Let's try blinking the built-in LEDs 
@@ -100,7 +99,7 @@ int main(void) {
     // That's all good, but polling is not so cool.
     // Let's do something better
 
-    SYSTICK_init(16000000 / 1000);
+    SysTick_init(16000000 / 1000);
 
     while(1) {
         GPIO_BSRR_writeBit(LED_blue, 1);
@@ -108,6 +107,10 @@ int main(void) {
         GPIO_BSRR_writeBit(LED_blue, 0);
         delay(500);
     } 
+
+    // A little bit better. However, what we eventually want 
+    // is non-blocking functions where cpu is not stuck at delay
+    // Let's do that
     
     return 0;
 }

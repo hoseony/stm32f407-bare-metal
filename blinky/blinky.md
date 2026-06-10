@@ -11,13 +11,10 @@ I will be putting some notes as I go through my journey during this summer (and 
 - [osdev.org: Linker Script](https://wiki.osdev.org/Linker_Scripts)
 - [STM32CUBEF4 (github)](https://github.com/PaxInstruments/STM32CubeF4/blob/master/Projects/STM32F4-Discovery/Applications/FatFs/FatFs_USBDisk/SW4STM32/STM32F4-DISCO/STM32F407VGTx_FLASH.ld)
 
-
 ### Bootstrapping
 When you start a computer, the process requires some sequences of stages to happen to run a program. You can think bootstrapping as something that happens between starting up a computer and running `main`.
 
-
 #### \_\_attribute\_\_
-
 `__attribute__((__aligned__(x)))`: Aligns memory address to multiple of x 
 
 `__attribute__((weak))`: Allows you to override the symbol
@@ -29,3 +26,4 @@ There are more stuff you can do, but I only put here things that might useful to
  - noreturn: this function never returns
 
 ### RCC (Reset and Clock Control)
+The programmer is required to specify which peripherals one wants to be using. This is done through RCC. It also saves some power too.
