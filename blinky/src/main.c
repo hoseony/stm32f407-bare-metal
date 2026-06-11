@@ -52,6 +52,7 @@ void counter(uint32_t count) {
 // Let's use the system clock 
 // Note that for stm32f407, the default clock is 16MHz
 
+// Here s_ticks is now a clock that is driven by interrupt called SysTick
 static volatile uint32_t s_ticks;
 
 void SysTick_Handler(void) {
@@ -63,6 +64,28 @@ void delay(uint32_t ms) {
     while (s_ticks < until) {
         ;
     }
+}
+
+bool timer_expired(uint32_t *t, uint32_t period, uint32_t now) {
+    if (now + period < *t) { // checking wrap around
+        *t = 0;
+    }
+
+    if (*t == 0) { // Initizlization
+        *t = now + period; 
+    }
+
+    if (*t > now) { // timer not yet reached
+        return false; 
+    }
+
+    if ( (now - *t) > period) { // If it has passed the more than one period
+        *t = now + period;      // re-initialize
+    } else {
+        *t = *t + period; // Otherwise, this becomes the next time it checks
+    }
+
+    return true;
 }
 
 int main(void) {
@@ -83,12 +106,16 @@ int main(void) {
     RCC->AHB1ENR |= BIT(3);
     GPIO_setMode(LED_blue, GPIO_MODE_OUTPUT);
 
+    uint16_t LED_green = PIN('D', 12);
+    GPIO_setMode(LED_green, GPIO_MODE_OUTPUT);
+
+    
     // Reference Manual 8.4.6 8.4.7
     // to turn LED on and off, you need to modify ODR register 
     // you can do this by modifying BSRR register
 
     /*
-    while(1) {
+    while (1) {
         GPIO_BSRR_writeBit(LED_blue, 1);
         counter(1000000);
         GPIO_BSRR_writeBit(LED_blue, 0);
@@ -101,17 +128,39 @@ int main(void) {
 
     SysTick_init(16000000 / 1000);
 
-    while(1) {
+    /*
+    while (1) {
         GPIO_BSRR_writeBit(LED_blue, 1);
         delay(500);
         GPIO_BSRR_writeBit(LED_blue, 0);
         delay(500);
     } 
+    */
 
     // A little bit better. However, what we eventually want 
     // is non-blocking functions where cpu is not stuck at delay
     // Let's do that
+
+    uint32_t timer_blue = 0;
+    uint32_t timer_green= 0;
+    uint32_t period = 500;
     
+    while (1) {
+        // Now it is "non blocking"
+        // Though still this is a polling
+        if (timer_expired(&timer_blue, period, s_ticks)) {
+            static bool LED_blue_bool = true;
+            GPIO_BSRR_writeBit(LED_blue, LED_blue_bool);
+            LED_blue_bool = !LED_blue_bool;
+        }
+
+        if (timer_expired(&timer_green, period, s_ticks)) {
+            static bool LED_green_bool = true;
+            GPIO_BSRR_writeBit(LED_green, LED_green_bool);
+            LED_green_bool = !LED_green_bool;
+        }
+    }
+   
     return 0;
 }
 
