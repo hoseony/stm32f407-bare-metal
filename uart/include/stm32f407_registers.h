@@ -89,5 +89,26 @@ typedef struct {
     volatile uint32_t CALI;
 } SYSTICK_t;
 
+// ------------ USART / UART -------------
+// Reference Manual 30.6.8
+typedef struct {
+    volatile uint32_t SR;
+    volatile uint32_t DR;
+    volatile uint32_t BRR;
+    volatile uint32_t CR1;
+    volatile uint32_t CR2;
+    volatile uint32_t CR3;
+    volatile uint32_t GTPR;
+} USART_t;
+
+// Reference Manual 2.3           // To Enable the peripheral (RCC Register, Bit)
+#define UART8  ((USART_t *)(0x40007c00)) // APB1ENR, 31
+#define UART7  ((USART_t *)(0x40007800)) // APB1ENR, 30
+#define USART6 ((USART_t *)(0x40011400)) // APB2ENR, 5
+#define UART5  ((USART_t *)(0x40005000)) // APB1ENR, 20
+#define UART4  ((USART_t *)(0x40004c00)) // APB1ENR, 19
+#define USART3 ((USART_t *)(0x40004800)) // APB1ENR, 18
+#define USART2 ((USART_t *)(0x40004400)) // APB1ENR, 17
+#define USART1 ((USART_t *)(0x40011000)) // APB2ENR, 4
 
 #endif
