@@ -94,7 +94,7 @@ typedef struct {
 typedef struct {
     volatile uint32_t SR;
     volatile uint32_t DR;
-    volatile uint32_t BRR;
+    volatile uint32_t BRR;  // baudrate
     volatile uint32_t CR1;
     volatile uint32_t CR2;
     volatile uint32_t CR3;
