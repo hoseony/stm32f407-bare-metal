@@ -21,10 +21,10 @@ void GPIO_setAF(uint16_t pin, uint8_t AFnum) {
 
     if (num > 7) { // use AFRH
         gpio->AFRH &= ~(0b1111U << ((num - 8) * 4));
-        gpio->AFRH |= ((uint32_t)(AFnum << ((num - 8) * 4)));
+        gpio->AFRH |= ((uint32_t)AFnum << ((num - 8) * 4));
     } else { // use AFRL
         gpio->AFRL &= ~(0b1111U << (num * 4));
-        gpio->AFRL |= ((uint32_t)(AFnum << (num * 4)));
+        gpio->AFRL |= ((uint32_t)AFnum << (num * 4));
     }
 }
 /* For now, I might not need to do this? I'll see how it goes 
@@ -77,8 +77,13 @@ uint8_t UART_readByte(USART_t *uart) {
     return data;
 }
 
-uint8_t UART_readBytes(USART_t *uart, uint8_t *buffer, uint32_t bufferSize) {
-
+void UART_readBytes(USART_t *uart, uint8_t *buffer, uint32_t bufferSize) {
+    for (uint32_t i = 0; i < bufferSize; i++) {
+        while ( !(uart->SR & BIT(5)) ) {
+            ;
+        }
+        buffer[i] = (uint8_t)(uart->DR & 0xFF);
+    }
 }
 
 void UART_transmitByte(USART_t *uart, uint8_t data) {
@@ -130,7 +135,7 @@ int main(void) {
     GPIO_setAF(uart_rx, 8);
 
     UART4->CR1 = 0;
-    UART4->BRR = 16000000 / 152000; // This is actually not exact because we are leaving the fraction part for now
+    UART4->BRR = 16000000 / 115200; // This is actually not exact because we are leaving the fraction part for now
     UART4->CR1 = BIT(3) | BIT(2) | BIT(13);
 
     // Main Loop
