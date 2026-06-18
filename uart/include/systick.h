@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../include/stm32f407_registers.h"
+#include "stm32f407_registers.h"
 
 #define SYSTICK ((SYSTICK_t *)(0xe000e010))
 

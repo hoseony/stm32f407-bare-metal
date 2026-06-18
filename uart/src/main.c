@@ -1,5 +1,3 @@
-#include <inttypes.h>
-
 #include "../include/systick.h"
 #include "../include/gpio.h"
 #include "../include/utils.h"
@@ -64,52 +62,17 @@ void GPIO_OSPEEDR_writeBit(uint16_t pin, uint8_t val) {
 }
 */
 
-int UART_readReady(USART_t *uart) {
-    return uart->SR & BIT(5);
-}
-
-uint8_t UART_readByte(USART_t *uart) {
-    while (!UART_readReady(uart)) { // wait till ready
-        ;
-    }
-
-    uint8_t data = (uint8_t)(uart->DR & 0xFF);
-    return data;
-}
-
-void UART_readBytes(USART_t *uart, uint8_t *buffer, uint32_t bufferSize) {
-    for (uint32_t i = 0; i < bufferSize; i++) {
-        while ( !(uart->SR & BIT(5)) ) {
-            ;
-        }
-        buffer[i] = (uint8_t)(uart->DR & 0xFF);
-    }
-}
-
-void UART_transmitByte(USART_t *uart, uint8_t data) {
-    uart->DR = data;
-
-    while ( (uart->SR & BIT(7)) == 0 ) { // wait till transfer done
-        ;
-    }
-}
-
-void UART_transmitBytes(USART_t *uart, uint8_t *data, uint32_t len) {
-    for (int i = 0; i < len; i++) {
-        uart->DR = data[i];
-        while ( (uart->SR & BIT(7)) == 0 ) {
-            ;
-        }
-    }
-} 
-
 int main(void) {
     
     // blinking setup
     uint16_t LED_green = PIN('D', 12);
+    uint16_t LED_red = PIN('D', 14);
+
     RCC->AHB1ENR |= BIT(3);
 
     GPIO_setMode(LED_green, GPIO_MODE_OUTPUT);
+    GPIO_setMode(LED_red , GPIO_MODE_OUTPUT);
+
     SysTick_init(16000000 / 1000);
 
     uint32_t timer_green= 0;
@@ -143,12 +106,22 @@ int main(void) {
         // Now it is "non blocking"
         // Though still this is a polling
         if (timer_expired(&timer_green, period, s_ticks)) {
-            static bool LED_green_bool = true;
+            static bool LED_green_bool = false;
+            static bool LED_red_bool = false;
+
             GPIO_BSRR_writeBit(LED_green, LED_green_bool);
-            LED_green_bool = !LED_green_bool;
+            GPIO_BSRR_writeBit(LED_red, LED_red_bool);
+
+            UART_transmitByte(UART4, 'A');
+            uint8_t received = UART_readByte(UART4);
+
+            if (received == 'A') {
+                LED_green_bool = !LED_green_bool;
+            } else {
+                LED_red_bool = !LED_red_bool;
+            }
         }
     }
     
-   
     return 0;
 }

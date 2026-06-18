@@ -1,5 +1,6 @@
 #ifndef GPIO_H
 #define GPIO_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "stm32f407_registers.h"
