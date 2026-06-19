@@ -3,6 +3,9 @@
 #include "../include/utils.h"
 #include "../include/uart.h"
 
+
+bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size);
+
 // ------------ Main Instructions -------------
 /* note
  *  maybe I should make a function for this:
@@ -103,8 +106,7 @@ int main(void) {
 
     // Main Loop
     while (1) {
-        // Now it is "non blocking"
-        // Though still this is a polling
+        /*
         if (timer_expired(&timer_green, period, s_ticks)) {
             static bool LED_green_bool = false;
             static bool LED_red_bool = false;
@@ -121,7 +123,42 @@ int main(void) {
                 LED_red_bool = !LED_red_bool;
             }
         }
+        */
+        if (timer_expired(&timer_green, period, s_ticks)) {
+            static bool LED_green_bool = false;
+            static bool LED_red_bool = true;
+
+            GPIO_BSRR_writeBit(LED_green, LED_green_bool);
+            GPIO_BSRR_writeBit(LED_red, LED_red_bool);
+
+            uint8_t bytes[] = "hello";
+            uint32_t size = sizeof(bytes) - 1;
+            uint8_t buf[sizeof(bytes) - 1];
+
+            for (uint32_t i = 0; i < size; i++) {
+                UART_transmitByte(UART4, bytes[i]);
+            }
+
+            UART_readBytes(UART4, buf, size);
+
+            if (checkMatch(bytes, buf, size)) {
+                LED_green_bool = !LED_green_bool;
+            } else {
+                LED_red_bool = !LED_red_bool;
+            }
+        }
     }
     
     return 0;
+}
+
+bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size) {
+    bool match = true;
+    for (uint32_t i = 0; i < size; i++) {
+        if (buf[i] != bytes[i]) {
+            return false;
+        }
+    }
+    
+    return match;
 }
