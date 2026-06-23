@@ -111,4 +111,10 @@ typedef struct {
 #define USART2 ((USART_t *)(0x40004400)) // APB1ENR, 17
 #define USART1 ((USART_t *)(0x40011000)) // APB2ENR, 4
 
+// ---------- NVIC ----------
+// iser: interrupt set-enable register...
+#define NVIC_ISER ((volatile uint32_t *)(0xe000e100))
+#define NVIC_IPR  ((volatile uint32_t *)(0xe000e400))
+#define IRQn_UART4 52
+
 #endif

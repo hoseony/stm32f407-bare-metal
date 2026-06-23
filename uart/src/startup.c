@@ -1,5 +1,5 @@
 #include "../include/systick.h"
-
+#include "../include/uart.h"
 
 // ------------ Startup Code -------------
 
@@ -25,7 +25,9 @@ __attribute__((naked, noreturn)) void _reset(void) {
 // 0s are placeholder (for now)
 
 __attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {
-    _estack, _reset, 0, 0, 0, 
-    0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 0, 
-    SysTick_Handler};
+    [0] = (void (*)(void))(&_estack),
+    [1] = _reset,
+
+    [15] = SysTick_Handler,
+    [16+52] = UART4_IRQHandler,
+};

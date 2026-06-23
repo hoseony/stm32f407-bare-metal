@@ -3,11 +3,13 @@
 #include "../include/utils.h"
 #include "../include/uart.h"
 
-// ============ Function Prototype =============
+// Sorry for how non-linear the code is right now. 
+// I will def clean it up soon....
 
-bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size);
+// ---------- Function Prototype ----------
+void GPIO_setAF(uint16_t pin, uint8_t AFnum);
 
-// ========== Main Instructions ============
+// ----------------------------------------
 /* note
  *  maybe I should make a function for this:
  *      GPIO_t *gpio = GPIO(PINBANK(pin));
@@ -40,8 +42,6 @@ void GPIO_OTYPER_writeBit(uint16_t pin, bool val) {
 
     GPIO_t *gpio = GPIO(PINBANK(pin));
     uint8_t num = PINNO(pin);
-
-
 }
 
 void GPIO_PUPDR_writeBit(uint16_t pin, uint8_t val) {
@@ -67,40 +67,18 @@ void GPIO_OSPEEDR_writeBit(uint16_t pin, uint8_t val) {
 }
 */
 
-// ========== RingBuffer implementation ==========
-#define RINGBUFFER_SIZE 64
+// ================= NVIC =====================
 
-typedef struct {
-    uint8_t data[RINGBUFFER_SIZE];
-    uint32_t head;
-    uint32_t tail;
-} RINGBUFFER_t; 
-
-// return byte through *byte
-bool RING_pop(RINGBUFFER_t *rb, uint8_t *byte) {
-    if (rb->head == rb->tail) { // buffer empty, nothing to free
-        return false;
-    }
-
-    *byte = rb->data[rb->head]; // return the value at the head
-    rb->head = (rb->head + 1) % RINGBUFFER_SIZE; // move the head (% for wraparround)
-    return true;
+void NVIC_enableIRQ(uint32_t irqn) {
+    NVIC_ISER[irqn / 32] = BIT(irqn % 32);
+    // you use = becuase it is a write-one-to-set register
 }
 
-bool RING_push(RINGBUFFER_t *rb, uint8_t byte) {
-    // % RINGBUFFER_SIZE in case wraparround
-    uint32_t nextTail = (rb->tail + 1) % RINGBUFFER_SIZE;
-
-    if (nextTail == rb->head) { // buffer is full
-        return false;
-    }
-
-    rb->data[rb->tail] = byte;
-    rb->tail = nextTail;
-    return true;
+void NVIC_setPrioriy(uint32_t irqn, uint8_t priority) {
+    NVIC_IPR[irqn] = priority << 4; // 4 because it doesn't use the entier 8 bit (only uses the 4)
 }
 
-// ===============================================
+// =============================================
 
 int main(void) {
     
@@ -140,8 +118,17 @@ int main(void) {
     UART4->BRR = 16000000 / 115200; // BaudRateRegister
     // This is actually not exact because we are leaving the fraction part for now
 
-    UART4->CR1 = BIT(3) | BIT(2) | BIT(13);
-    
+    UART4->CR1 = BIT(3) | BIT(2) | BIT(13) | BIT(5); 
+    // Bit(5) for RXNE interrupt enable
+    // ========== Interrupts.... ==========
+
+    // Initialize ringBuffer 
+    // This is done on uart.c
+    // RINGBUFFER_t UART4_ringBuffer = {0};
+
+    NVIC_setPrioriy(IRQn_UART4, 5);
+    NVIC_enableIRQ(IRQn_UART4);
+   
     // ========= Main Loop ==========
     while (1) {
         /* e.g. testing transmission/reception of a byte
@@ -185,9 +172,10 @@ int main(void) {
             // Once this event happens, we immidetly need to read the data
 
             // One way of achieving this is by using "ring buffer" to store incoming data.
-            
+            // Then, you need to enable NVIC (nestied vector interrupt controller)
+            // And make IRQ stuff
 
-            if (checkMatch(bytes, buf, size)) {
+            if (LED_red_bool) {
                 LED_green_bool = !LED_green_bool;
             } else {
                 LED_red_bool = !LED_red_bool;
@@ -198,13 +186,3 @@ int main(void) {
     return 0;
 }
 
-bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size) {
-    bool match = true;
-    for (uint32_t i = 0; i < size; i++) {
-        if (buf[i] != bytes[i]) {
-            return false;
-        }
-    }
-    
-    return match;
-}
