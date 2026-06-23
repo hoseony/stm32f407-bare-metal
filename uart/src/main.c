@@ -8,7 +8,7 @@
 
 // ---------- Function Prototype ----------
 void GPIO_setAF(uint16_t pin, uint8_t AFnum);
-
+bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size);
 // ----------------------------------------
 /* note
  *  maybe I should make a function for this:
@@ -175,7 +175,23 @@ int main(void) {
             // Then, you need to enable NVIC (nestied vector interrupt controller)
             // And make IRQ stuff
 
-            if (LED_red_bool) {
+            // First, let's clean up the Ring buffer
+            uint8_t temp;
+            while (RING_pop(&UART4_ringBuffer, &temp)) {
+                ;
+            }
+
+            // This should fire interrupt
+            // (the interrupt handler pushes it to the ringBuffer)
+            UART_transmitBytes(UART4, bytes, size);
+
+            for (uint32_t i = 0; i < size;) {
+                if (RING_pop(&UART4_ringBuffer, &buf[i])) {
+                    i++;
+                }
+            }
+
+            if (checkMatch(bytes, buf, size)) {
                 LED_green_bool = !LED_green_bool;
             } else {
                 LED_red_bool = !LED_red_bool;
@@ -186,3 +202,13 @@ int main(void) {
     return 0;
 }
 
+bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size) {
+    bool match = true;
+    for (uint32_t i = 0; i < size; i++) {
+        if (buf[i] != bytes[i]) {
+            return false;
+        }
+    }
+    
+    return match;
+}

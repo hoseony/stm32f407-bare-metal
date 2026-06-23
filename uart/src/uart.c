@@ -78,7 +78,7 @@ bool RING_pop(RINGBUFFER_t *rb, uint8_t *byte) {
 
     *byte = rb->data[rb->head]; // return the value at the head
     rb->head = (rb->head + 1) % RINGBUFFER_SIZE; // move the head (% for wraparround)
-    return true;
+    return true; // if it did pop, return true
 }
 
 bool RING_push(RINGBUFFER_t *rb, uint8_t byte) {
@@ -96,8 +96,8 @@ bool RING_push(RINGBUFFER_t *rb, uint8_t byte) {
 
 // ---------- Interrupt ----------
 void UART4_IRQHandler(void) {
-    if (UART4->SR & BIT(5)) { // RXNE
-        uint8_t byte = UART4->DR;
+     if (UART4->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(UART4->DR);
         RING_push(&UART4_ringBuffer, byte);
     }
 }
