@@ -74,8 +74,74 @@ void NVIC_enableIRQ(uint32_t irqn) {
     // you use = becuase it is a write-one-to-set register
 }
 
-void NVIC_setPrioriy(uint32_t irqn, uint8_t priority) {
+void NVIC_setPriority(uint32_t irqn, uint8_t priority) {
     NVIC_IPR[irqn] = priority << 4; // 4 because it doesn't use the entier 8 bit (only uses the 4)
+}
+
+// === uart send help ==
+
+void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority) {
+// Initialize uart peripheral register 
+// priority is unused if rxInterruptEnable is false
+    // initialize default values
+    uint32_t pclk = 16000000;
+    uint32_t irqn = 0;
+    
+    // reference ../include/stm32f407_registers.h for more
+    if (uart == UART8) {
+        RCC->APB1ENR |= BIT(31);
+        irqn = IRQn_UART8;
+
+    } else if (uart == UART7) {
+        RCC->APB1ENR |= BIT(30);
+        irqn = IRQn_UART7;
+
+    } else if (uart == USART6) {
+        RCC->APB2ENR |= BIT(5);
+        irqn = IRQn_USART6;
+
+    } else if (uart == UART5) {
+        RCC->APB1ENR |= BIT(20);
+        irqn = IRQn_UART5;
+
+    } else if (uart == UART4) {
+        RCC->APB1ENR |= BIT(19);
+        irqn = IRQn_UART4;
+
+    } else if (uart == USART3) {
+        RCC->APB1ENR |= BIT(18);
+        irqn = IRQn_USART3;
+
+    } else if (uart == USART2) {
+        RCC->APB1ENR |= BIT(17);
+        irqn = IRQn_USART2;
+
+    } else if (uart == USART1) {
+        RCC->APB2ENR |= BIT(4);
+        irqn = IRQn_USART1;
+    }
+
+    uart->CR1 = 0;
+    uart->CR2 = 0;
+    uart->CR3 = 0;
+
+    // actual ok way of doing the baudRate
+    uart->BRR = (pclk + (baudRate / 2U))/ baudRate;
+    uart->CR1 = BIT(3) | BIT(2) | BIT(13);
+
+    if (rxInterruptEnable) {
+        uart->CR1 |= BIT(5);
+        NVIC_setPriority(irqn, priority);
+    }
+}
+
+void UART_gpioInit(USART_t *uart, uint16_t tx, uint16_t rx) {
+// receive tx & rx -> gpio enable, gpio set to AF, set AF number (maybe this is too much???)
+// to do this eaiser, let's make function to get AF...
+}
+
+void UART_getPinAF(USART_t *uart, bool isItRX, uint8_t *af) {
+
 }
 
 // =============================================
@@ -153,7 +219,7 @@ int main(void) {
 
         if (timer_expired(&timer_green, period, s_ticks)) {
             static bool LED_green_bool = false;
-            static bool LED_red_bool = true;
+            static bool LED_red_bool = false;
 
             GPIO_BSRR_writeBit(LED_green, LED_green_bool);
             GPIO_BSRR_writeBit(LED_red, LED_red_bool);
@@ -171,7 +237,9 @@ int main(void) {
             // There is RXNE (received Data Ready to be Read)
             // Once this event happens, we immidetly need to read the data
 
-            // One way of achieving this is by using "ring buffer" to store incoming data.
+            // One way of achieving this is by using "ring buffer" 
+            // to store incoming data.
+
             // Then, you need to enable NVIC (nestied vector interrupt controller)
             // And make IRQ stuff
 

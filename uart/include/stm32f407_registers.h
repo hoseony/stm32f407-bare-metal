@@ -115,6 +115,14 @@ typedef struct {
 // iser: interrupt set-enable register...
 #define NVIC_ISER ((volatile uint32_t *)(0xe000e100))
 #define NVIC_IPR  ((volatile uint32_t *)(0xe000e400))
-#define IRQn_UART4 52
+
+#define IRQn_UART8  83
+#define IRQn_UART7  82
+#define IRQn_USART6 71
+#define IRQn_UART5  53
+#define IRQn_UART4  52
+#define IRQn_USART3 39
+#define IRQn_USART2 38
+#define IRQn_USART1 37
 
 #endif
