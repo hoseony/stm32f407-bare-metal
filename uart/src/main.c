@@ -3,18 +3,14 @@
 #include "../include/utils.h"
 #include "../include/uart.h"
 
-// Sorry for how non-linear the code is right now. 
-// I will def clean it up soon....
-
 // ---------- Function Prototype ----------
 void GPIO_setAF(uint16_t pin, uint8_t AFnum);
 bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size);
+
+void NVIC_enableIRQ(uint32_t irqn);
+void NVIC_setPriority(uint32_t irqn, uint8_t priority);
+void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority);
 // ----------------------------------------
-/* note
- *  maybe I should make a function for this:
- *      GPIO_t *gpio = GPIO(PINBANK(pin));
- *      uint8_t num = PINNO(pin);
- */
 
 void GPIO_setAF(uint16_t pin, uint8_t AFnum) {
     // When using AF, you need to set the AF number 
@@ -68,7 +64,6 @@ void GPIO_OSPEEDR_writeBit(uint16_t pin, uint8_t val) {
 */
 
 // ================= NVIC =====================
-
 void NVIC_enableIRQ(uint32_t irqn) {
     NVIC_ISER[irqn / 32] = BIT(irqn % 32);
     // you use = becuase it is a write-one-to-set register
@@ -83,6 +78,7 @@ void NVIC_setPriority(uint32_t irqn, uint8_t priority) {
 void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority) {
 // Initialize uart peripheral register 
 // priority is unused if rxInterruptEnable is false
+
     // initialize default values
     uint32_t pclk = 16000000;
     uint32_t irqn = 0;
