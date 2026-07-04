@@ -24,6 +24,15 @@ if (timer_expired(&timer_green, period, s_ticks)) {
 ```
 I will transmit a byte and receive a byte (loop-back) to confirm if the data transmitted/received are the same.
 
+## Multiple Bytes
+That's good and all... But it's not that useful.
+
+Let's make interrupt based uart communication. As mentioned on the comment of the commit, the hardware can only hold 1 byte. Thus, I can not send multiple bytes and hope it is stored inside some FIFO register.
+
+To fix this, let's head to Reference Manual 30.4 USART interrupts. There is RXNE (received Data Ready to be Read) once this event happens, we immidetly need to read the data. Since this is an interrupt requests, things will work nicely.
+
+One way of storing data is thorugh "ring buffer". I believe other people explained it [better](https://ntietz.com/blog/whats-in-a-ring-buffer/).
+
 ## Testing
 I haven't used it yet but maybe having UASRT to serial would be nice. Though, it is still not hard to test with openOCD (Open On-Chip Debugger). I always setup alias on my terminal when I am working with openOCD as the command gets out of my brain capacity.
 ```
@@ -57,15 +66,6 @@ $12 = 40
 0x20000004 <UART4_ringBuffer>:	111 'o'	104 'h'	101 'e'	108 'l'	108 'l'	111 'o'	104 'h'	101 'e'
 0x2000000c <UART4_ringBuffer+8>:	108 'l'	108 'l'	111 'o'	104 'h'	101 'e'	108 'l'	108 'l'	111 'o'
 ```
-
-## Multiple Bytes
-That's good and all... But it's not that useful.
-
-Let's make interrupt based uart communication. As mentioned on the comment of the commit, the hardware can only hold 1 byte. Thus, I can not send multiple bytes and hope it is stored inside some FIFO register.
-
-To fix this, let's head to Reference Manual 30.4 USART interrupts. There is RXNE (received Data Ready to be Read) once this event happens, we immidetly need to read the data. Since this is an interrupt requests, things will work nicely.
-
-One way of storing data is thorugh "ring buffer". I believe other people explained it [better](https://ntietz.com/blog/whats-in-a-ring-buffer/).
 
 ## Then?
 Then, I started generalizing my implementation for UART4 to other UARTs to make it an actual usable driver. Quite a bit of work, but I wanted to make some working driver that I can use later.
