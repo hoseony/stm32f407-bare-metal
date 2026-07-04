@@ -1,6 +1,5 @@
 # 02 UART 
 
-
 ## Single Byte
 The general structure would be as such:
 ```
@@ -70,3 +69,17 @@ One way of storing data is thorugh "ring buffer". I believe other people explain
 
 ## Then?
 Then, I started generalizing my implementation for UART4 to other UARTs to make it an actual usable driver. Quite a bit of work, but I wanted to make some working driver that I can use later.
+
+
+## What Pin can I use for UARTx?
+Since I don't wanna look through the datasheet everytime, I made this table.
+
+
+| Peripheral | TX Pins | RX Pins | AF Number | APB Bus | RCC Enable Bit |
+|---|---|---|---:|---|---:|
+| USART1 | PA9, PB6 | PA10, PB7 | AF7 | APB2 | APB2ENR bit 4 |
+| USART2 | PA2, PD5 | PA3, PD6 | AF7 | APB1 | APB1ENR bit 17 |
+| USART3 | PB10, PC10, PD8 | PB11, PC11, PD9 | AF7 | APB1 | APB1ENR bit 18 |
+| UART4 | PA0, PC10 | PA1, PC11 | AF8 | APB1 | APB1ENR bit 19 |
+| UART5 | PC12 | PD2 | AF8 | APB1 | APB1ENR bit 20 |
+| USART6 | PC6, PG14 | PC7, PG9 | AF8 | APB2 | APB2ENR bit 5 |
