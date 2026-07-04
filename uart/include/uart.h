@@ -13,7 +13,12 @@ typedef struct {
     uint32_t tail;
 } RINGBUFFER_t; 
 
+extern RINGBUFFER_t USART1_ringBuffer;
+extern RINGBUFFER_t USART2_ringBuffer;
+extern RINGBUFFER_t USART3_ringBuffer;
 extern RINGBUFFER_t UART4_ringBuffer;
+extern RINGBUFFER_t UART5_ringBuffer;
+extern RINGBUFFER_t USART6_ringBuffer;
 
 // ---------- function prototype ----------
 int UART_readReady(USART_t *uart);
@@ -30,7 +35,13 @@ bool RING_pop(RINGBUFFER_t *rb, uint8_t *byte);
 bool RING_push(RINGBUFFER_t *rb, uint8_t byte);
 
 // Interrupt
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
 void UART4_IRQHandler(void);
+void UART5_IRQHandler(void);
+void USART6_IRQHandler(void);
+
 
 // Driver
 void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority);

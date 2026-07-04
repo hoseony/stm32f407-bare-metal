@@ -1,9 +1,5 @@
 # 02 UART 
 
-todo:
-- finish IRQHandler for all UARTs
-
-
 ## Single Byte
 The general structure would be as such:
 ```

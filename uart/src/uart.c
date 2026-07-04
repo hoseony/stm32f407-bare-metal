@@ -18,16 +18,27 @@ bool RING_pop(RINGBUFFER_t *rb, uint8_t *byte);
 bool RING_push(RINGBUFFER_t *rb, uint8_t byte);
 
 // Interrupt
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
 void UART4_IRQHandler(void);
+void UART5_IRQHandler(void);
+void USART6_IRQHandler(void);
 
 // Driver
 void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority);
 bool UART_gpioInit(USART_t *uart, uint16_t tx, uint16_t rx);
 bool UART_getPinAF(USART_t *uart, uint16_t pin, bool isRX, uint8_t *af);
-// ----------------------------------------
 
+// ----------------------------------------
 // initialization of ring buffer
+RINGBUFFER_t USART1_ringBuffer = {0};
+RINGBUFFER_t USART2_ringBuffer = {0};
+RINGBUFFER_t USART3_ringBuffer = {0};
 RINGBUFFER_t UART4_ringBuffer = {0};
+RINGBUFFER_t UART5_ringBuffer = {0};
+RINGBUFFER_t USART6_ringBuffer = {0};
+// ----------------------------------------
 
 // Check if the UART is ready to read
 int UART_readReady(USART_t *uart) {
@@ -103,6 +114,27 @@ bool RING_push(RINGBUFFER_t *rb, uint8_t byte) {
 }
 
 // ---------- Interrupt ----------
+void USART1_IRQHandler(void) {
+     if (USART1->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(USART1->DR);
+        RING_push(&USART1_ringBuffer, byte);
+    }
+}
+
+void USART2_IRQHandler(void) {
+     if (USART2->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(USART2->DR);
+        RING_push(&USART2_ringBuffer, byte);
+    }
+}
+
+void USART3_IRQHandler(void) {
+     if (USART3->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(USART3->DR);
+        RING_push(&USART3_ringBuffer, byte);
+    }
+}
+
 void UART4_IRQHandler(void) {
      if (UART4->SR & BIT(5)) { // RXNE
         uint8_t byte = (uint8_t)(UART4->DR);
@@ -110,8 +142,27 @@ void UART4_IRQHandler(void) {
     }
 }
 
-// ---------- Generalized Driver ----------
+void UART5_IRQHandler(void) {
+     if (UART5->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(UART5->DR);
+        RING_push(&UART5_ringBuffer, byte);
+    }
+}
 
+void USART6_IRQHandler(void) {
+     if (USART6->SR & BIT(5)) { // RXNE
+        uint8_t byte = (uint8_t)(USART6->DR);
+        RING_push(&USART6_ringBuffer, byte);
+    }
+}
+
+// ---------- Generalized Driver ----------
+// To make using things easier, I made initialization functions
+// e.g. 
+/*
+    UART_gpioInit(UART4, uart_tx, uart_rx);
+    UART_init(UART4, 115200, true, 5);
+*/
 void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority) {
 // Initialize uart peripheral register 
 // priority is unused if rxInterruptEnable is false

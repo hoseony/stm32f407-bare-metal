@@ -4,6 +4,7 @@
 #include "../include/uart.h"
 
 // ---------- Function Prototype ----------
+// Check if contents of *buf and *bytes matches
 bool checkMatch(uint8_t *buf, uint8_t *bytes, uint32_t size);
 
 // ----------------------------------------
@@ -23,7 +24,7 @@ int main(void) {
 
     uint32_t timer_green= 0;
     uint32_t period = 500;
-    // ========== USART ==========
+    // ========== UART ==========
     // Let's use these for now
     //  - PA0 AF8, UART4_TX
     //  - PA1 AF8, UART4_RX
@@ -45,8 +46,7 @@ int main(void) {
             GPIO_BSRR_writeBit(LED_green, LED_green_bool);
             GPIO_BSRR_writeBit(LED_red, LED_red_bool);
 
-            // UART part
-
+            // UART 
             uint8_t bytes[] = "hello";
             uint32_t size = sizeof(bytes) - 1;
             uint8_t buf[sizeof(bytes) - 1];
@@ -60,6 +60,8 @@ int main(void) {
             // (the interrupt handler pushes it to the ringBuffer)
             UART_transmitBytes(UART4, bytes, size);
 
+            // pop the ringBuffer and put it to a buffer to check 
+            // if it is transmitted correctly
             for (uint32_t i = 0; i < size;) {
                 if (RING_pop(&UART4_ringBuffer, &buf[i])) {
                     i++;

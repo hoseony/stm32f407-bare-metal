@@ -11,5 +11,6 @@ void NVIC_enableIRQ(uint32_t irqn) {
 }
 
 void NVIC_setPriority(uint32_t irqn, uint8_t priority) {
-    NVIC_IPR[irqn] = priority << 4; // 4 because it doesn't use the entier 8 bit (only uses the 4)
+    NVIC_IPR[irqn] = priority << 4; 
+    // 4 because it doesn't use the entier 8 bit (only uses the 4)
 }
