@@ -7,5 +7,7 @@
 
 void GPIO_setMode(uint16_t pin, uint8_t mode);
 void GPIO_BSRR_writeBit(uint16_t pin, bool val);
+void GPIO_setAF(uint16_t pin, uint8_t AFnum);
+void GPIO_enable(uint16_t pin);
 
 #endif

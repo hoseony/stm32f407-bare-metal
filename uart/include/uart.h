@@ -31,6 +31,11 @@ bool RING_push(RINGBUFFER_t *rb, uint8_t byte);
 
 // Interrupt
 void UART4_IRQHandler(void);
+
+// Driver
+void UART_init(USART_t *uart, uint32_t baudRate, bool rxInterruptEnable, uint8_t priority);
+bool UART_gpioInit(USART_t *uart, uint16_t tx, uint16_t rx);
+bool UART_getPinAF(USART_t *uart, uint16_t pin, bool isRX, uint8_t *af);
 // ----------------------------------------
 
 #endif
