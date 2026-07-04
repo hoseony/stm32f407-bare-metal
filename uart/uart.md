@@ -26,7 +26,38 @@ if (timer_expired(&timer_green, period, s_ticks)) {
 I will transmit a byte and receive a byte (loop-back) to confirm if the data transmitted/received are the same.
 
 ## Testing
-I haven't used it yet but maybe having UASRT to serial would be nice...
+I haven't used it yet but maybe having UASRT to serial would be nice. Though, it is still not hard to test with openOCD (Open On-Chip Debugger). I always setup alias on my terminal when I am working with openOCD as the command gets out of my brain capacity.
+```
+alias openocd-stm32f407d='openocd -f interface/stlink.cfg -f target/stm32f4x.cfg'
+```
+
+The default usage of gdb with openOCD requires using two terminal (thank you tmux!). You need to type the above command on the one terminal. Then, open another terminal and type these commands:
+```
+arm-none-eabi-gdb firmware.elf  | This will start a gdb session
+target remote :3333             | when you first connect to the board with openOCD, it will tell you the port. 
+                                | For my case it is 3333
+monitor reset halt
+load
+break main
+break 324                       | for the current version of main code I am writing, this is equivalent
+                                | to the line after "UART_transmitBytes(UART4, bytes, size);"
+continue
+```
+
+In gdb, you can also define a function. It makes the life easier. Let me show you an example:
+```
+(gdb) define rb
+End with a line saying just "end".
+>p UART4_ringBuffer.head
+>p UART4_ringBuffer.tail
+>x/16cb UART4_ringBuffer.data
+>end
+(gdb) rb
+$11 = 36
+$12 = 40
+0x20000004 <UART4_ringBuffer>:	111 'o'	104 'h'	101 'e'	108 'l'	108 'l'	111 'o'	104 'h'	101 'e'
+0x2000000c <UART4_ringBuffer+8>:	108 'l'	108 'l'	111 'o'	104 'h'	101 'e'	108 'l'	108 'l'	111 'o'
+```
 
 ## Multiple Bytes
 That's good and all... But it's not that useful.
