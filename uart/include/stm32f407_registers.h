@@ -25,7 +25,7 @@ typedef struct {
 enum {
     GPIO_MODE_INPUT,    // 00: Digital input
     GPIO_MODE_OUTPUT,   // 01: Digital Output
-    GPIO_MODE_AF,       // 10: Alternate Function (pin is hadned over to a peripheral)
+    GPIO_MODE_AF,       // 10: Alternate Function (pin is handed over to a peripheral)
                         //     e.g. uart, psi, i2c, ...
     GPIO_MODE_ANALOG    // 11: Analog input
 };

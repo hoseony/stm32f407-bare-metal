@@ -31,10 +31,10 @@ __attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {
     [15] = SysTick_Handler,
 
     // UART & USART handlers
-    [16+37] = USART1_IRQHandler,
-    [16+38] = USART2_IRQHandler,
-    [16+39] = USART3_IRQHandler,
-    [16+52] = UART4_IRQHandler,
-    [16+53] = UART5_IRQHandler,
-    [16+71] = USART6_IRQHandler,
+    [16 + 37] = USART1_IRQHandler,
+    [16 + 38] = USART2_IRQHandler,
+    [16 + 39] = USART3_IRQHandler,
+    [16 + 52] = UART4_IRQHandler,
+    [16 + 53] = UART5_IRQHandler,
+    [16 + 71] = USART6_IRQHandler,
 };
