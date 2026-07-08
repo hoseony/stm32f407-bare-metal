@@ -1,22 +1,15 @@
 # 02 UART
 
-After getting blinky working, I wanted to make the board talk to the outside world. UART felt like the natural next step: it is simple enough to understand at the register level, but still useful enough that I can keep reusing it in future projects.
+After getting blinky working, I wanted to make the board do some basic communication. The obvious choice was a UART driver.
 
-For this part, I used UART4 on the STM32F407 Discovery board:
-
+For this part, I used UART4 on the STM32F407 Discovery board (I do not remember why I chose UART4, but that is what it is):
 - TX: PA0, alternate function AF8
 - RX: PA1, alternate function AF8
 - Baud rate: 115200
 
 For testing, I connected TX and RX together as a loopback. If the byte I send comes back correctly, the green LED toggles. If something does not match, the red LED toggles.
 
-## Useful References
-
-- STM32F407 Reference Manual: Section 7 RCC, Section 8 GPIO, Section 10 Interrupts and events, Section 30 USART
-- STM32F407 Datasheet: Table 9 Alternate function mapping
-
-## Starting With One Byte
-
+## Starting with One Byte
 The first goal was just to send and receive one byte.
 
 ```c
@@ -34,28 +27,28 @@ At the register level, this mostly means:
 
 1. Enable the GPIO clock.
 2. Set PA0 and PA1 to alternate function mode.
-3. Select AF8 for PA0/PA1.
+3. Select AF8 for PA0 and PA1.
 4. Enable the UART4 peripheral clock from RCC.
 5. Set the baud rate register.
-6. Enable transmitter, receiver, and UART itself.
+6. Enable the transmitter, receiver, and UART itself.
 
 For UART4, the important registers are:
 
 - `RCC->APB1ENR`: enables the UART4 peripheral clock.
 - `USARTx->BRR`: sets the baud rate.
-- `USARTx->CR1`: enables TX, RX, UART, and optionally RX interrupt.
+- `USARTx->CR1`: enables TX, RX, UART, and optionally the RX interrupt.
 - `USARTx->SR`: contains status flags like `RXNE` and `TXE`.
 - `USARTx->DR`: the data register used for both transmit and receive.
 
-My first blocking functions looked like this conceptually:
+My first blocking functions looked like this:
 
 ```c
 void UART_transmitByte(USART_t *uart, uint8_t data) {
-    uart->DR = data;
-
     while ((uart->SR & BIT(7)) == 0) {
         ;
     }
+
+    uart->DR = data;
 }
 
 uint8_t UART_readByte(USART_t *uart) {
@@ -69,34 +62,28 @@ uint8_t UART_readByte(USART_t *uart) {
 
 `BIT(7)` is `TXE`, which tells me the transmit data register is empty. `BIT(5)` is `RXNE`, which tells me received data is ready to read.
 
-This worked for sending one byte, and it was a good first sanity check that the GPIO alternate function setup, UART clock, baud rate, and loopback wiring were all correct.
+This worked for sending one byte, and it was a good first step to check that the GPIO alternate function setup, UART clock, baud rate, and loopback wiring were all correct.
 
-## The Multiple Byte Problem
+## Multiple-Byte
+One byte worked, so the next step was sending and receiving multiple bytes.
 
-One byte worked, so naturally I tried to send multiple bytes.
+This caused some problems because the UART data register is not a string buffer. I cannot write several bytes and expect the hardware to remember all of them for me.
 
-This cause some problems as UART data register is not a string buffer. I cannot write several bytes and expect the hardware to remember all of them for me.
-
-In fact, on the commit `b28db24`, I left myself the note:
-> transmit/reading bytes does not work because of the fifo register size. will need to implement interrupt based
-
-That was the point where the project moved from "write a byte, read a byte" to "I need a small software buffer with interrupt."
-
-The blocking transmit side is still simple because I can wait for `TXE` before writing each byte:
+To solve this, I started using interrupt-based UART communication. The blocking transmit side is still simple because I can wait for `TXE` before writing each byte:
 
 ```c
 void UART_transmitBytes(USART_t *uart, uint8_t *data, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
-        uart->DR = data[i];
-
         while ((uart->SR & BIT(7)) == 0) {
             ;
         }
+
+        uart->DR = data[i];
     }
 }
 ```
 
-Receiving is different. If bytes arrive and I do not read them quickly enough, I can lose data. This is where interrupts make more sense.
+Receiving is different. If bytes arrive and I do not read them quickly enough, I can lose data. The microcontroller needs to immediately check when the data comes in. This is where interrupts make more sense.
 
 ## RXNE Interrupt
 
@@ -108,10 +95,10 @@ The idea:
 2. The UART sets `RXNE`.
 3. The interrupt handler runs.
 4. The handler reads `DR`.
-5. The byte gets stored into a software buffer.
+5. The byte gets stored in a software buffer.
 6. The main loop can read from that buffer later.
 
-For UART4, the handler looks like this:
+For UART4, the handler looks like this (for others it basically looks the same):
 
 ```c
 void UART4_IRQHandler(void) {
@@ -122,14 +109,11 @@ void UART4_IRQHandler(void) {
 }
 ```
 
-One detail that helped me understand this better: reading `DR` is not just "getting the byte." It is also part of clearing the receive condition, because the hardware now knows I consumed the received data.
-
 ## Ring Buffer
 
 For the software buffer, I used a ring buffer.
 
 A ring buffer has:
-
 - `data`: fixed-size byte array
 - `head`: where data is popped from
 - `tail`: where new data is pushed
@@ -174,11 +158,9 @@ bool RING_pop(RINGBUFFER_t *rb, uint8_t *byte) {
 }
 ```
 
-This made the receive path much cleaner. The interrupt handler only does the small urgent thing: read the byte and push it into the buffer. The main program can decide what to do with the bytes later.
-
 ## NVIC Setup
 
-Adding the UART interrupt also meant I needed to deal with NVIC.
+Adding the UART interrupt also meant I needed to deal with NVIC (nested vector interrupt controller).
 
 For UART4, the IRQ number is 52:
 
@@ -193,18 +175,7 @@ NVIC_setPriority(irqn, priority);
 NVIC_enableIRQ(irqn);
 ```
 
-The vector table also needs to point to the correct handler. That is why later commits added IRQ handlers such as:
-
-- `USART1_IRQHandler`
-- `USART2_IRQHandler`
-- `USART3_IRQHandler`
-- `UART4_IRQHandler`
-- `UART5_IRQHandler`
-- `USART6_IRQHandler`
-
-At first I only needed `UART4_IRQHandler`, but once the driver became more general, the rest of the handlers followed the same pattern.
-
-## Testing With OpenOCD And GDB
+## Testing with OpenOCD and GDB
 
 I tested this with OpenOCD and GDB. Since the OpenOCD command is easy to forget, I usually make an alias:
 
@@ -243,7 +214,7 @@ $12 = 40
 
 This was a nice way to see that bytes were actually being received by the interrupt handler and stored in RAM.
 
-## Generalizing The Driver
+## Generalizing the Driver
 
 After UART4 worked, I started making the driver usable for other UART/USART peripherals too.
 
@@ -254,20 +225,20 @@ UART_gpioInit(UART4, PIN('A', 0), PIN('A', 1));
 UART_init(UART4, 115200, true, 5);
 ```
 
-`UART_gpioInit` does:
+`UART_gpioInit` does the following:
 
-1. Check if the requested TX/RX pins are valid for the selected UART.
-2. Enable the GPIO ports.
-3. Set the pins to alternate function mode.
-4. Set the correct AF number.
+1. Checks if the requested TX/RX pins are valid for the selected UART.
+2. Enables the GPIO ports.
+3. Sets the pins to alternate function mode.
+4. Sets the correct AF number.
 
-`UART_init` does:
+`UART_init` does the following:
 
-1. Enable the UART/USART peripheral clock.
-2. Clear `CR1`, `CR2`, and `CR3`.
-3. Set `BRR` from the baud rate.
-4. Enable TX, RX, and UART.
-5. If requested, enable RXNE interrupt and NVIC.
+1. Enables the UART/USART peripheral clock.
+2. Clears `CR1`, `CR2`, and `CR3`.
+3. Sets `BRR` from the baud rate.
+4. Enables TX, RX, and UART.
+5. If requested, enables the RXNE interrupt and NVIC.
 
 Right now, the baud rate calculation assumes a 16 MHz peripheral clock:
 
@@ -291,8 +262,6 @@ I do not want to keep opening the datasheet every time I choose UART pins, so I 
 | UART5 | PC12 | PD2 | AF8 | APB1 | APB1ENR bit 20 |
 | USART6 | PC6, PG14 | PC7, PG9 | AF8 | APB2 | APB2ENR bit 5 |
 
-One small note: the register header currently has `UART7` and `UART8` addresses commented around in the driver history, but this board/MCU setup is focused on USART1, USART2, USART3, UART4, UART5, and USART6.
-
 ## Current Status
 
 The current loopback test sends `"hello"` through UART4 and waits for the same bytes to appear in the UART4 ring buffer:
@@ -313,9 +282,9 @@ for (uint32_t i = 0; i < size;) {
 
 If the received buffer matches the transmitted bytes, the green LED toggles. Otherwise, the red LED toggles.
 
-That is enough for now: UART4 loopback works, interrupts are being used for RX, and the driver is in a better shape for reuse later.
+That is enough for now: UART4 loopback works, interrupts are being used for RX, and the driver is in better shape for reuse later.
 
-## Things To Improve Later
+## Things to Improve Later
 
 - Use the real APB clock instead of assuming 16 MHz.
 - Add timeout versions of blocking reads.
