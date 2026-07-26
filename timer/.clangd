@@ -1,0 +1,11 @@
+CompileFlags:
+  Add:
+    - --target=arm-none-eabi
+    - -std=c11
+    - -x
+    - c
+    - -Wall
+    - -Wextra
+    - -mcpu=cortex-m4
+    - -mthumb
+    - -Iinclude
