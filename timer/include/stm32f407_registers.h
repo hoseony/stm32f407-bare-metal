@@ -155,16 +155,22 @@ typedef struct {
 typedef struct {
     volatile uint32_t CR1;
     volatile uint32_t CR2;
+
     volatile uint32_t SMCR;
-    volatile uint32_t DIER;
+    volatile uint32_t DIER; // DMA/Interrupt enable register
     volatile uint32_t SR;
     volatile uint32_t EGR;
     volatile uint32_t CCMR1;
     volatile uint32_t CCMR2;
     volatile uint32_t CCER;
-    volatile uint32_t CNT;
-    volatile uint32_t PSC;
-    volatile uint32_t ARR;
+    volatile uint32_t CNT;  // Counter
+    volatile uint32_t PSC;  // Prescaler
+                            // divides the counter (slows down)
+
+    volatile uint32_t ARR;  // Auto-Reload Register
+                            // value that the counter will count up to
+                            // (e.g. 0..ARR)
+
     volatile uint32_t _RESERVED0;
     volatile uint32_t CCR1;
     volatile uint32_t CCR2;
@@ -176,11 +182,11 @@ typedef struct {
 } TIM_GEN_t;
 
 // Address of General Purpose Timers
-#define TIM7 ((volatile uint32_t *)(0x40001400))
-#define TIM6 ((volatile uint32_t *)(0x40001000))
-#define TIM5 ((volatile uint32_t *)(0x40000c00))
-#define TIM4 ((volatile uint32_t *)(0x40000800))
-#define TIM3 ((volatile uint32_t *)(0x40000400))
-#define TIM2 ((volatile uint32_t *)(0x40000000))
+#define TIM7 ((TIM_GEN_t *)(0x40001400))
+#define TIM6 ((TIM_GEN_t *)(0x40001000))
+#define TIM5 ((TIM_GEN_t *)(0x40000c00))
+#define TIM4 ((TIM_GEN_t *)(0x40000800))
+#define TIM3 ((TIM_GEN_t *)(0x40000400))
+#define TIM2 ((TIM_GEN_t *)(0x40000000))
 
 #endif

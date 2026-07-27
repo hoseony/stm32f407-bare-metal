@@ -1,5 +1,6 @@
 #include "../include/systick.h"
 #include "../include/uart.h"
+#include "../include/timer.h"
 
 // ------------ Startup Code -------------
 
@@ -37,4 +38,6 @@ __attribute__((section(".vectors"))) void (*const tab[16 + 91])(void) = {
     [16 + 52] = UART4_IRQHandler,
     [16 + 53] = UART5_IRQHandler,
     [16 + 71] = USART6_IRQHandler,
+
+    [16 + 28] = TIM2_IRQHandler,
 };
