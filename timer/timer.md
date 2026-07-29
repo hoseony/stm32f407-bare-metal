@@ -23,5 +23,13 @@ There are three Time-base units:
 - Prescaler Register: divides counter clock frequency (by factor between 1 and 65536)
 - Update Interrupt: interrupt signal when the counter reaches Auto-Reload Register's value. 
 
-
 Prescaler updates when next event hits. This makes sense as if it updates immediately, that will cause some problem (different clock rate in the middle, not fun, not good clock). This is done through 'Prescaler buffer,' (Reference Manual Figure.135 and 136).
+
+the initialization is also quite straight forward.
+ - enable clock in RCC 
+ - set PSC 
+ - set ARR 
+ - enable update interrupt
+ - enable IRQ
+ - enable timer
+

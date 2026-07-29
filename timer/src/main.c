@@ -9,13 +9,12 @@
 
 // ----------------------------------------
 
-// I had to expose these pin so that
+// I had to expose this pin so that
 // interrupt handler can access these
 uint16_t LED_green = PIN('D', 12);
 volatile bool LED_green_bool = false;
 
 int main(void) {
-    
     // ========== blinky ==========
     RCC->AHB1ENR |= BIT(3);
     GPIO_setMode(LED_green, GPIO_MODE_OUTPUT);
