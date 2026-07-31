@@ -32,9 +32,9 @@ int main(void) {
     
     // set PSC (idk some random number)
     // system clock: 16000000
-    TIM2->PSC = 1600; 
-    TIM2->ARR = 5000; // This will be 0.5 sec (I think????)
-   
+    TIM2->PSC = 1599; 
+    TIM2->ARR = 4999; 
+
     // enable update interrupt 
     TIM2->DIER |= BIT(0);
 
